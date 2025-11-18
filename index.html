@@ -3,164 +3,215 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>แอปบัญชีรายรับรายจ่าย (Google Sheet)</title>
-    <!-- โหลด Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>แอปบัญชีรายรับรายจ่าย (Bootstrap)</title>
+    
+    <!-- โหลด Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- โหลด Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- โหลดฟอนต์ Inter -->
+    <!-- โหลดฟอนต์ -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- โหลด Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     
     <style>
-        /* ใช้ฟอนต์ Sarabun สำหรับภาษาไทย และ Inter สำหรับภาษาอังกฤษ */
         body {
             font-family: 'Sarabun', 'Inter', sans-serif;
+            background-color: #f8f9fa;
         }
         .text-income {
-            color: #10B981; /* Tailwind green-600 */
+            color: #198754 !important; /* Bootstrap success */
         }
         .text-expense {
-            color: #EF4444; /* Tailwind red-500 */
+            color: #dc3545 !important; /* Bootstrap danger */
         }
-        .bg-income {
-            background-color: #10B981;
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
         }
-        .bg-expense {
-            background-color: #EF4444;
+        .card:hover {
+            transform: translateY(-2px);
         }
-        /* เพิ่ม Spinner สำหรับ Loading */
-        .loader {
-            border-top-color: #3498db;
-            animation: spin 1s linear infinite;
+        .card-title-sm {
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #6c757d;
         }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        .amount-display {
+            font-size: 1.75rem;
+            font-weight: 700;
+        }
+        /* Spinner สำหรับ Loading */
+        .loader-container {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
     </style>
 </head>
-<body class="bg-gray-100 text-gray-800">
+<body>
 
-    <!-- Modal สำหรับ Loading -->
-    <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 hidden">
-        <div class="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-24 w-24"></div>
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loader-container d-none">
+        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+            <span class="visually-hidden">Loading...</span>
+        </div>
     </div>
 
-    <div class="container mx-auto max-w-7xl p-4 md:p-8">
+    <div class="container py-5">
         
-        <header class="mb-8">
-            <h1 class="text-4xl font-bold text-center text-gray-900">บัญชีรายรับ-รายจ่าย</h1>
-            <p class="text-center text-gray-600 mt-2">บันทึกและติดตามการเงินของคุณอย่างง่ายดาย (Google Sheet)</p>
+        <header class="text-center mb-5">
+            <h1 class="display-5 fw-bold text-dark">บัญชีรายรับ-รายจ่าย</h1>
+            <p class="text-muted">บันทึกและติดตามการเงินของคุณ (Bootstrap Design)</p>
         </header>
 
         <!-- สรุปยอด -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
-                <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider">รายรับรวม</h3>
-                <p id="summaryIncome" class="text-3xl font-bold text-income mt-2">฿0.00</p>
+        <div class="row g-4 mb-5">
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <div class="card-title-sm mb-2">รายรับรวม</div>
+                        <div id="summaryIncome" class="amount-display text-income">฿0.00</div>
+                    </div>
+                </div>
             </div>
-            <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
-                <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider">รายจ่ายรวม</h3>
-                <p id="summaryExpense" class="text-3xl font-bold text-expense mt-2">฿0.00</p>
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <div class="card-title-sm mb-2">รายจ่ายรวม</div>
+                        <div id="summaryExpense" class="amount-display text-expense">฿0.00</div>
+                    </div>
+                </div>
             </div>
-            <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
-                <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider">ยอดคงเหลือ</h3>
-                <p id="summaryBalance" class="text-3xl font-bold text-gray-700 mt-2">฿0.00</p>
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <div class="card-title-sm mb-2">ยอดคงเหลือ</div>
+                        <div id="summaryBalance" class="amount-display text-dark">฿0.00</div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="row g-4">
 
             <!-- คอลัมน์ซ้าย: ฟอร์มและรายการ -->
-            <div class="lg:col-span-2 space-y-8">
+            <div class="col-lg-8">
                 
                 <!-- ฟอร์มเพิ่มรายการ -->
-                <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
-                    <h2 class="text-2xl font-semibold mb-6">เพิ่มรายการใหม่</h2>
-                    <form id="addTransactionForm" class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">ประเภท</label>
-                            <select id="formType" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required>
-                                <option value="income">รายรับ</option>
-                                <option value="expense">รายจ่าย</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1" for="formAmount">จำนวนเงิน (บาท)</label>
-                            <input type="number" id="formAmount" min="0.01" step="0.01" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="0.00" required>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1" for="formCategory">หมวดหมู่</label>
-                            <input type="text" id="formCategory" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="เช่น เงินเดือน, ค่าอาหาร, ค่าเดินทาง" required>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1" for="formDate">วันที่</label>
-                            <input type="date" id="formDate" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required>
-                        </div>
-                        <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-blue-700 transition duration-200">
-                            เพิ่มรายการ
-                        </button>
-                    </form>
+                <div class="card mb-4">
+                    <div class="card-header bg-white py-3">
+                        <h5 class="mb-0 fw-bold"><i class="bi bi-plus-circle me-2"></i>เพิ่มรายการใหม่</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="addTransactionForm" class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">ประเภท</label>
+                                <select id="formType" class="form-select" required>
+                                    <option value="income">รายรับ</option>
+                                    <option value="expense">รายจ่าย</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">จำนวนเงิน (บาท)</label>
+                                <input type="number" id="formAmount" min="0.01" step="0.01" class="form-control" placeholder="0.00" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">หมวดหมู่</label>
+                                <input type="text" id="formCategory" class="form-control" placeholder="เช่น เงินเดือน, ค่าอาหาร" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">วันที่</label>
+                                <input type="date" id="formDate" class="form-control" required>
+                            </div>
+                            <div class="col-12 mt-4">
+                                <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
+                                    บันทึกรายการ
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
 
                 <!-- รายการทั้งหมด -->
-                <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
-                    <div class="flex justify-between items-center mb-6">
-                        <div class="flex-1">
-                            <h2 class="text-2xl font-semibold">ประวัติรายการ</h2>
-                            <p id="connectionStatus" class="text-xs text-gray-500">กำลังเชื่อมต่อกับ Google Sheet...</p>
+                <div class="card">
+                    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div>
+                            <h5 class="mb-0 fw-bold"><i class="bi bi-list-ul me-2"></i>ประวัติรายการ</h5>
+                            <small id="connectionStatus" class="text-muted" style="font-size: 0.75rem;">กำลังเชื่อมต่อ...</small>
                         </div>
                         <!-- ปุ่มกรอง -->
-                        <div id="filterButtons" class="flex space-x-2">
-                            <button data-filter="all" class="filter-btn bg-blue-600 text-white px-3 py-1 rounded-md text-sm">ทั้งหมด</button>
-                            <button data-filter="today" class="filter-btn bg-gray-200 text-gray-700 px-3 py-1 rounded-md text-sm">วันนี้</button>
-                            <button data-filter="month" class="filter-btn bg-gray-200 text-gray-700 px-3 py-1 rounded-md text-sm">เดือนนี้</button>
-                            <button data-filter="year" class="filter-btn bg-gray-200 text-gray-700 px-3 py-1 rounded-md text-sm">ปีนี้</button>
+                        <div id="filterButtons" class="btn-group btn-group-sm" role="group">
+                            <button type="button" data-filter="all" class="filter-btn btn btn-primary">ทั้งหมด</button>
+                            <button type="button" data-filter="today" class="filter-btn btn btn-outline-secondary">วันนี้</button>
+                            <button type="button" data-filter="month" class="filter-btn btn btn-outline-secondary">เดือนนี้</button>
+                            <button type="button" data-filter="year" class="filter-btn btn btn-outline-secondary">ปีนี้</button>
                         </div>
                     </div>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">วันที่</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">หมวดหมู่</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">จำนวนเงิน</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"></th>
-                                </tr>
-                            </thead>
-                            <tbody id="transactionList" class="bg-white divide-y divide-gray-200">
-                                <!-- รายการจะถูกเพิ่มที่นี่ -->
-                                <tr>
-                                    <td colspan="4" class="px-6 py-12 text-center text-gray-500">
-                                        กำลังโหลดข้อมูล...
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0 align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="ps-4">วันที่</th>
+                                        <th>หมวดหมู่</th>
+                                        <th class="text-end">จำนวนเงิน</th>
+                                        <th class="text-end pe-4">จัดการ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="transactionList">
+                                    <!-- รายการจะถูกเพิ่มที่นี่ -->
+                                    <tr>
+                                        <td colspan="4" class="text-center py-5 text-muted">
+                                            กำลังโหลดข้อมูล...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- คอลัมน์ขวา: กราฟ -->
-            <div class="space-y-8">
-                <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
-                    <h2 class="text-2xl font-semibold mb-6 text-center">ภาพรวม</h2>
-                    <div class="h-64 md:h-80 flex justify-center items-center">
-                        <canvas id="pieChart"></canvas>
+            <div class="col-lg-4">
+                <div class="card mb-4">
+                    <div class="card-header bg-white py-3">
+                        <h5 class="mb-0 fw-bold text-center">ภาพรวม</h5>
+                    </div>
+                    <div class="card-body">
+                        <div style="height: 250px; display: flex; justify-content: center;">
+                            <canvas id="pieChart"></canvas>
+                        </div>
                     </div>
                 </div>
-                <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
-                    <h2 class="text-2xl font-semibold mb-6 text-center">หมวดหมู่รายจ่าย</h2>
-                    <div class="h-64 md:h-80 flex justify-center items-center">
-                        <canvas id="barChart"></canvas>
+                <div class="card">
+                    <div class="card-header bg-white py-3">
+                        <h5 class="mb-0 fw-bold text-center">รายจ่ายตามหมวดหมู่</h5>
+                    </div>
+                    <div class="card-body">
+                        <div style="height: 300px;">
+                            <canvas id="barChart"></canvas>
+                        </div>
                     </div>
                 </div>
             </div>
 
         </div>
-        
     </div>
+
+    <!-- Bootstrap JS (Optional for some components but good to have) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <!-- Google Apps Script Module -->
     <script type="module">
@@ -168,7 +219,7 @@
         // !! สำคัญ !!
         // วาง URL ของเว็บแอปที่คุณได้จากการ "เผยแพร่" Google Apps Script ที่นี่
         // -----------------------------------------------------------------
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyywidU491Wx7IbOwQRjnlnaa-uGQ6dUIaYNh3MkDcvKFRFPrfgdshC1WsBdqrkUzxc2Q/exec';
+        const SCRIPT_URL = 'YOUR_DEPLOYED_WEB_APP_URL_HERE';
         // -----------------------------------------------------------------
 
         // --- DOM Elements ---
@@ -188,15 +239,11 @@
         const connectionStatus = document.getElementById('connectionStatus');
 
         // --- App State ---
-        let allTransactions = []; // Store all data from Google Sheet
-        let currentFilter = 'all'; // 'all', 'today', 'month', 'year'
-        let chartInstances = {
-            pie: null,
-            bar: null
-        };
+        let allTransactions = []; 
+        let currentFilter = 'all'; 
+        let chartInstances = { pie: null, bar: null };
 
         // --- Utility Functions ---
-        
         function formatCurrency(amount) {
             return new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(amount);
         }
@@ -207,211 +254,147 @@
         }
 
         function showLoading() {
-            loadingOverlay.classList.remove('hidden');
+            loadingOverlay.classList.remove('d-none');
         }
 
         function hideLoading() {
-            loadingOverlay.classList.add('hidden');
+            loadingOverlay.classList.add('d-none');
         }
 
         // --- Core Functions (Google Apps Script) ---
-
-        /**
-         * 1. Load transactions from Google Sheet
-         */
         async function loadTransactions() {
             if (SCRIPT_URL === 'YOUR_DEPLOYED_WEB_APP_URL_HERE') {
-                connectionStatus.textContent = "โปรดใส่ SCRIPT_URL ในโค้ด HTML บรรทัดที่ 260";
-                connectionStatus.classList.add('text-red-500');
-                transactionList.innerHTML = `<tr><td colspan="4" class="px-6 py-12 text-center text-red-500">ยังไม่ได้ตั้งค่า Google Apps Script URL</td></tr>`;
+                connectionStatus.textContent = "โปรดใส่ SCRIPT_URL ในโค้ด";
+                connectionStatus.className = "text-danger";
+                transactionList.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-danger">ยังไม่ได้ตั้งค่า Google Apps Script URL</td></tr>`;
                 return;
             }
             
             showLoading();
-            connectionStatus.textContent = "กำลังโหลดข้อมูลจาก Google Sheet...";
+            connectionStatus.textContent = "กำลังโหลดข้อมูล...";
+            connectionStatus.className = "text-muted";
+            
             try {
                 const response = await fetch(`${SCRIPT_URL}?action=read`);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 const data = await response.json();
                 
                 if (data.status === 'success') {
-                    // แปลงข้อมูลที่ได้กลับเป็น object ที่ถูกต้อง (โดยเฉพาะ date)
                     allTransactions = data.data.map(tx => ({
                         ...tx,
-                        date: new Date(tx.date), // แปลง date string กลับเป็น Date object
-                        amount: parseFloat(tx.amount) // แปลง amount กลับเป็น number
+                        date: new Date(tx.date),
+                        amount: parseFloat(tx.amount)
                     }));
-                    
-                    // Sort by date (newest first)
                     allTransactions.sort((a, b) => b.date - a.date);
                     
                     applyFilterAndRender();
-                    connectionStatus.textContent = "เชื่อมต่อ Google Sheet สำเร็จ";
-                    connectionStatus.classList.remove('text-red-500');
-                    connectionStatus.classList.add('text-green-600');
+                    connectionStatus.textContent = "เชื่อมต่อแล้ว";
+                    connectionStatus.className = "text-success";
                 } else {
                     throw new Error(data.message || 'Error fetching data');
                 }
             } catch (error) {
-                console.error("Error loading transactions:", error);
-                connectionStatus.textContent = "ไม่สามารถโหลดข้อมูลได้";
-                connectionStatus.classList.add('text-red-500');
+                console.error("Error loading:", error);
+                connectionStatus.textContent = "เชื่อมต่อล้มเหลว";
+                connectionStatus.className = "text-danger";
+                transactionList.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-danger">ไม่สามารถโหลดข้อมูลได้: ${error.message}</td></tr>`;
             } finally {
                 hideLoading();
             }
         }
 
-        /**
-         * 2. Handle Form Submission
-         */
         async function handleAddTransaction(e) {
             e.preventDefault();
-
             const newTransaction = {
                 type: formType.value,
                 amount: parseFloat(formAmount.value),
                 category: formCategory.value,
-                date: formDate.value // ส่งเป็น string YYYY-MM-DD
+                date: formDate.value
             };
 
             showLoading();
             try {
-                const response = await fetch(SCRIPT_URL, {
+                await fetch(SCRIPT_URL, {
                     method: 'POST',
-                    mode: 'no-cors', // Apps Script มักจะต้องใช้ no-cors หรือการตั้งค่า CORS ที่เหมาะสม
-                    cache: 'no-cache',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: 'add',
-                        data: newTransaction
-                    }),
-                    redirect: 'follow'
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'add', data: newTransaction })
                 });
-                
-                // การเรียกแบบ 'no-cors' มักจะไม่คืนค่า response body ที่อ่านได้
-                // เราจึงต้องโหลดข้อมูลใหม่เพื่อยืนยัน
-                
-                // Reset form
                 addTransactionForm.reset();
-                setDefaultDate(); // ตั้งค่าวันที่กลับเป็นปัจจุบัน
-                
-                // Reload data from sheet
+                setDefaultDate();
                 await loadTransactions(); 
-
             } catch (error) {
-                console.error("Error adding document: ", error);
+                console.error("Error adding:", error);
+                alert("เกิดข้อผิดพลาดในการเพิ่มรายการ");
             } finally {
                 hideLoading();
             }
         }
 
-        /**
-         * 3. Handle Transaction Deletion
-         */
         async function handleDeleteTransaction(e) {
-            if (e.target.classList.contains('delete-btn')) {
-                const rowId = e.target.dataset.id; // นี่คือหมายเลขแถวใน Google Sheet
+            // ใช้ .closest เพื่อหาปุ่มถ้ากดโดนไอคอน
+            const btn = e.target.closest('.delete-btn');
+            if (btn) {
+                const rowId = btn.dataset.id;
                 if (!rowId) return;
+                
+                if(!confirm('คุณต้องการลบรายการนี้ใช่หรือไม่?')) return;
 
                 showLoading();
                 try {
-                    const response = await fetch(SCRIPT_URL, {
+                    await fetch(SCRIPT_URL, {
                         method: 'POST',
                         mode: 'no-cors',
-                        cache: 'no-cache',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            action: 'delete',
-                            rowId: parseInt(rowId) // ส่งหมายเลขแถว
-                        }),
-                        redirect: 'follow'
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'delete', rowId: parseInt(rowId) })
                     });
-
-                    // Reload data from sheet
                     await loadTransactions();
-
                 } catch (error) {
-                    console.error("Error deleting document: ", error);
+                    console.error("Error deleting:", error);
+                    alert("ลบรายการไม่สำเร็จ");
                 } finally {
                     hideLoading();
                 }
             }
         }
         
-        // --- (ฟังก์ชันส่วน UI: 4, 5, 6, 7, 8, 9, 10 ไม่เปลี่ยนแปลง) ---
-        // ... (คัดลอกฟังก์ชัน applyFilterAndRender, handleFilterChange, renderSummary, renderTransactionList, renderCharts จากเวอร์ชัน Firebase มาวางที่นี่ได้เลย) ...
-        // ... (ผมจะคัดลอกมาให้เลยเพื่อความสมบูรณ์) ...
-
-        /**
-         * 6. Handle Filter Change
-         */
         function handleFilterChange(e) {
             if (e.target.classList.contains('filter-btn')) {
-                // Update button styles
+                // Update Bootstrap classes for active/inactive state
                 document.querySelectorAll('.filter-btn').forEach(btn => {
-                    btn.classList.remove('bg-blue-600', 'text-white');
-                    btn.classList.add('bg-gray-200', 'text-gray-700');
+                    btn.classList.remove('btn-primary');
+                    btn.classList.add('btn-outline-secondary');
                 });
-                e.target.classList.add('bg-blue-600', 'text-white');
-                e.target.classList.remove('bg-gray-200', 'text-gray-700');
+                e.target.classList.remove('btn-outline-secondary');
+                e.target.classList.add('btn-primary');
                 
                 currentFilter = e.target.dataset.filter;
                 applyFilterAndRender();
             }
         }
         
-        /**
-         * 7. Filter data and update all UI parts
-         */
         function applyFilterAndRender() {
             const now = new Date();
-            // ต้องสร้าง Date object ใหม่สำหรับ today ไม่เช่นนั้น now จะถูกเปลี่ยน
             const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
             const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
             const startOfYear = new Date(now.getFullYear(), 0, 1);
 
             let filteredTransactions;
-
             switch (currentFilter) {
-                case 'today':
-                    filteredTransactions = allTransactions.filter(tx => tx.date.getTime() >= today.getTime());
-                    break;
-                case 'month':
-                    filteredTransactions = allTransactions.filter(tx => tx.date.getTime() >= startOfMonth.getTime());
-                    break;
-                case 'year':
-                    filteredTransactions = allTransactions.filter(tx => tx.date.getTime() >= startOfYear.getTime());
-                    break;
-                case 'all':
-                default:
-                    filteredTransactions = allTransactions;
-                    break;
+                case 'today': filteredTransactions = allTransactions.filter(tx => tx.date.getTime() >= today.getTime()); break;
+                case 'month': filteredTransactions = allTransactions.filter(tx => tx.date.getTime() >= startOfMonth.getTime()); break;
+                case 'year': filteredTransactions = allTransactions.filter(tx => tx.date.getTime() >= startOfYear.getTime()); break;
+                default: filteredTransactions = allTransactions; break;
             }
             
-            // Update all parts of the UI
             renderSummary(filteredTransactions);
             renderTransactionList(filteredTransactions);
             renderCharts(filteredTransactions);
         }
 
-        /**
-         * 8. Render Summary Cards
-         */
         function renderSummary(transactions) {
-            const totalIncome = transactions
-                .filter(tx => tx.type === 'income')
-                .reduce((sum, tx) => sum + tx.amount, 0);
-            
-            const totalExpense = transactions
-                .filter(tx => tx.type === 'expense')
-                .reduce((sum, tx) => sum + tx.amount, 0);
-
+            const totalIncome = transactions.filter(tx => tx.type === 'income').reduce((sum, tx) => sum + tx.amount, 0);
+            const totalExpense = transactions.filter(tx => tx.type === 'expense').reduce((sum, tx) => sum + tx.amount, 0);
             const balance = totalIncome - totalExpense;
 
             summaryIncomeEl.textContent = formatCurrency(totalIncome);
@@ -419,17 +402,15 @@
             summaryBalanceEl.textContent = formatCurrency(balance);
         }
 
-        /**
-         * 9. Render Transaction List Table
-         */
         function renderTransactionList(transactions) {
-            transactionList.innerHTML = ''; // Clear list
+            transactionList.innerHTML = ''; 
 
             if (transactions.length === 0) {
                 transactionList.innerHTML = `
                     <tr>
-                        <td colspan="4" class="px-6 py-12 text-center text-gray-500">
-                            ไม่พบรายการสำหรับตัวกรองนี้
+                        <td colspan="4" class="text-center py-5 text-muted">
+                            <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                            ไม่พบรายการสำหรับช่วงเวลานี้
                         </td>
                     </tr>
                 `;
@@ -438,22 +419,21 @@
 
             transactions.forEach(tx => {
                 const row = document.createElement('tr');
-                row.className = 'hover:bg-gray-50';
                 
                 const amountClass = tx.type === 'income' ? 'text-income' : 'text-expense';
                 const amountSign = tx.type === 'income' ? '+' : '-';
                 
                 row.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                        ${tx.date.toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: 'numeric' })}
+                    <td class="ps-4 text-secondary">
+                        ${tx.date.toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' })}
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${tx.category}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-medium ${amountClass}">
+                    <td class="fw-medium text-dark">${tx.category}</td>
+                    <td class="text-end ${amountClass} fw-bold">
                         ${amountSign}${formatCurrency(tx.amount)}
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
-                        <button data-id="${tx.rowId}" class="delete-btn text-red-500 hover:text-red-700">
-                            ลบ
+                    <td class="text-end pe-4">
+                        <button data-id="${tx.rowId}" class="btn btn-sm btn-outline-danger delete-btn" title="ลบรายการ">
+                            <i class="bi bi-trash"></i>
                         </button>
                     </td>
                 `;
@@ -461,71 +441,54 @@
             });
         }
 
-        /**
-         * 10. Render Charts
-         */
         function renderCharts(transactions) {
-            // --- Pie Chart Data ---
-            const totalIncome = transactions
-                .filter(tx => tx.type === 'income')
-                .reduce((sum, tx) => sum + tx.amount, 0);
-            
-            const totalExpense = transactions
-                .filter(tx => tx.type === 'expense')
-                .reduce((sum, tx) => sum + tx.amount, 0);
+            const totalIncome = transactions.filter(tx => tx.type === 'income').reduce((sum, tx) => sum + tx.amount, 0);
+            const totalExpense = transactions.filter(tx => tx.type === 'expense').reduce((sum, tx) => sum + tx.amount, 0);
 
-            if (chartInstances.pie) {
-                chartInstances.pie.destroy();
-            }
+            if (chartInstances.pie) chartInstances.pie.destroy();
             chartInstances.pie = new Chart(pieChartCtx, {
                 type: 'doughnut',
                 data: {
                     labels: ['รายรับ', 'รายจ่าย'],
                     datasets: [{
                         data: [totalIncome, totalExpense],
-                        backgroundColor: ['#10B981', '#EF4444'],
-                        hoverBackgroundColor: ['#059669', '#DC2626'],
-                        borderColor: '#fff',
-                        borderWidth: 2
+                        backgroundColor: ['#198754', '#dc3545'],
+                        hoverBackgroundColor: ['#157347', '#bb2d3b'],
+                        borderWidth: 0
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    cutout: '70%',
-                    plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: (c) => `${c.label}: ${formatCurrency(c.raw)}` }}}
+                    plugins: { legend: { position: 'bottom' } }
                 }
             });
 
-            // --- Bar Chart Data (Expense Categories) ---
             const expenseCategories = {};
             transactions.filter(tx => tx.type === 'expense').forEach(tx => {
                 expenseCategories[tx.category] = (expenseCategories[tx.category] || 0) + tx.amount;
             });
-            const categoryLabels = Object.keys(expenseCategories);
-            const categoryData = Object.values(expenseCategories);
-
-            if (chartInstances.bar) {
-                chartInstances.bar.destroy();
-            }
+            
+            if (chartInstances.bar) chartInstances.bar.destroy();
             chartInstances.bar = new Chart(barChartCtx, {
                 type: 'bar',
                 data: {
-                    labels: categoryLabels,
+                    labels: Object.keys(expenseCategories),
                     datasets: [{
-                        label: 'รายจ่ายตามหมวดหมู่',
-                        data: categoryData,
-                        backgroundColor: 'rgba(239, 68, 68, 0.6)',
-                        borderColor: 'rgba(239, 68, 68, 1)',
-                        borderWidth: 1
+                        label: 'รายจ่าย',
+                        data: Object.values(expenseCategories),
+                        backgroundColor: 'rgba(220, 53, 69, 0.7)',
+                        borderColor: 'rgb(220, 53, 69)',
+                        borderWidth: 1,
+                        borderRadius: 4
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     indexAxis: 'y',
-                    plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => `${c.label}: ${formatCurrency(c.raw)}` }}},
-                    scales: { x: { beginAtZero: true } }
+                    plugins: { legend: { display: false } },
+                    scales: { x: { beginAtZero: true, grid: { display: false } } }
                 }
             });
         }
@@ -537,7 +500,7 @@
 
         // --- Initial Load ---
         setDefaultDate();
-        loadTransactions(); // โหลดข้อมูลจาก Google Sheet เมื่อเปิดหน้า
+        loadTransactions();
     </script>
 
 </body>
